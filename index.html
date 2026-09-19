@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ChatID - Personal 1-on-1 Messenger</title>
+  
+  <!-- PWA & Web App Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ChatID">
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary-color: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: rgba(99, 102, 241, 0.15);
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+      --surface-dark: #1e293b;
+      --surface-card: rgba(30, 41, 59, 0.7);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --online-status: #10b981;
+      --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.35);
+      --radius-md: 12px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      max-height: 920px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 640px) {
+      .app-container {
+        height: 90vh;
+        border-radius: 28px;
+      }
+    }
+
+    .fade-in { animation: fadeIn 0.35s ease-out forwards; }
+    .slide-up { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .pulse-glow { animation: pulseGlow 2s infinite alternate; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; translateY(0); }
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
+      100% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.6); }
+    }
+
+    /* PWA Banner */
+    .pwa-banner {
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      color: #fff;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 100;
+    }
+
+    .btn-install-pwa {
+      background: #fff;
+      color: #4f46e5;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Splash Screen */
+    .splash-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .splash-logo-container {
+      width: 90px;
+      height: 90px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      border-radius: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+    }
+
+    .splash-icon { font-size: 42px; }
+
+    .splash-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .splash-title .accent { color: #6366f1; }
+    .splash-tagline { font-size: 14px; color: var(--text-muted); margin-bottom: 40px; }
+
+    /* Login Screen */
+    .login-screen {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 32px 24px;
+      justify-content: space-between;
+      overflow-y: auto;
+    }
+
+    .login-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--primary-light);
+      color: var(--primary-color);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .login-header h2 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .login-header p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    .login-form { display: flex; flex-direction: column; gap: 18px; margin: 24px 0; }
+
+    .input-group { display: flex; flex-direction: column; gap: 8px; }
+    .input-group label { font-size: 13px; font-weight: 600; color: #cbd5e1; }
+    .input-group label .required { color: #ef4444; }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+
+    .input-wrapper input, .input-group input {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .input-wrapper input:focus, .input-group input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .btn-random {
+      position: absolute;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--surface-border);
+      color: #cbd5e1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Custom Photo Upload Box */
+    .photo-upload-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px dashed var(--primary-color);
+      padding: 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .photo-upload-box:hover {
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .preview-user-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary-color);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .upload-text-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .upload-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .upload-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .hidden-file-input {
+      display: none;
+    }
+
+    .avatar-picker {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+
+    .avatar-option {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      opacity: 0.6;
+      transition: var(--transition);
+    }
+
+    .avatar-option.selected {
+      border-color: var(--primary-color);
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .error-text { font-size: 12px; color: #ef4444; margin-top: 4px; }
+
+    .btn-login {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Home Screen */
+    .home-screen {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--surface-dark);
+    }
+
+    .home-header {
+      padding: 20px 20px 16px 20px;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .user-profile-bar { display: flex; align-items: center; gap: 12px; }
+
+    .user-avatar-container {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .user-avatar-mini {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary-color);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .avatar-edit-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: var(--primary-color);
+      color: #fff;
+      font-size: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--surface-dark);
+    }
+
+    .user-info-mini { flex: 1; }
+    .user-name { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.2; }
+
+    .user-id-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-top: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .search-bar-trigger {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--surface-border);
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .home-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .chat-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .chat-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      background: rgba(30, 41, 59, 0.4);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .chat-item:hover { background: rgba(30, 41, 59, 0.8); transform: translateX(2px); }
+
+    .avatar-wrapper { position: relative; }
+    .chat-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+
+    .status-indicator {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--surface-dark);
+    }
+
+    .status-indicator.online { background: var(--online-status); }
+
+    .chat-info { flex: 1; min-width: 0; }
+    .chat-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .chat-name { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-time { font-size: 11px; color: var(--text-muted); }
+    .chat-preview-row { display: flex; justify-content: space-between; align-items: center; }
+    .chat-last-msg { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+
+    .unread-badge {
+      background: var(--primary-color);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+    }
+
+    .fab-search {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff;
+      border: none;
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 22px;
+    }
+
+    /* Search Modal */
+    .search-modal-backdrop {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .search-modal-container { display: flex; flex-direction: column; height: 100%; padding: 20px; }
+    .modal-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--surface-border);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .search-field { position: relative; display: flex; align-items: center; margin-bottom: 16px; }
+
+    .search-field input {
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .icon-search { position: absolute; left: 14px; color: var(--text-muted); }
+
+    .btn-search-go {
+      position: absolute;
+      right: 8px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .result-profile-card {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+
+    .profile-banner { height: 70px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); }
+
+    .profile-content {
+      padding: 0 20px 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: -35px;
+      text-align: center;
+    }
+
+    .profile-avatar { width: 76px; height: 76px; border-radius: 50%; border: 4px solid var(--surface-dark); object-fit: cover; margin-bottom: 12px; }
+    .profile-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .profile-id-tag { font-size: 12px; color: var(--primary-color); background: var(--primary-light); padding: 2px 10px; border-radius: 10px; font-weight: 600; margin-bottom: 12px; }
+
+    .btn-start-chat {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Chat Screen */
+    .chat-screen { display: flex; flex-direction: column; height: 100%; background: #0b1120; }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--surface-border);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .target-user-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .header-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .target-name { font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .target-status { font-size: 11px; color: var(--text-muted); }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message-bubble-wrapper { display: flex; width: 100%; }
+    .message-bubble-wrapper.sent { justify-content: flex-end; }
+    .message-bubble-wrapper.received { justify-content: flex-start; }
+
+    .message-bubble {
+      max-width: 78%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      word-break: break-word;
+    }
+
+    .sent .message-bubble {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .received .message-bubble {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid var(--surface-border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-text { font-size: 14px; line-height: 1.45; }
+    .message-meta { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 4px; }
+    .message-time { font-size: 10px; opacity: 0.7; }
+
+    .chat-input-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid var(--surface-border);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .btn-send {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="root" class="app-container"></div>
+
+  <!-- React & Babel via CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const chatChannel = new BroadcastChannel('chatID_realtime_sync');
+
+    const DEFAULT_AVATARS = [
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80",
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80",
+      "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=250&q=80"
+    ];
+
+    function SplashScreen({ onFinish }) {
+      React.useEffect(() => {
+        const timer = setTimeout(() => { onFinish(); }, 2000);
+        return () => clearTimeout(timer);
+      }, [onFinish]);
+
+      return (
+        <div className="splash-screen fade-in">
+          <div className="splash-logo-container pulse-glow">
+            <div className="splash-icon">💬</div>
+          </div>
+          <h1 className="splash-title">Chat<span className="accent">ID</span></h1>
+          <p className="splash-tagline">Real-Time 1-on-1 Messenger</p>
+        </div>
+      );
+    }
+
+    function LoginScreen({ onLogin }) {
+      const [id, setId] = React.useState('');
+      const [name, setName] = React.useState('');
+      const [customAvatar, setCustomAvatar] = React.useState(DEFAULT_AVATARS[0]);
+      const [error, setError] = React.useState('');
+      const fileInputRef = React.useRef(null);
+
+      const generateRandomId = () => {
+        const random = Math.floor(100000 + Math.random() * 900000).toString();
+        setId(random);
+        setError('');
+      };
+
+      // Handle Image Upload from File Manager / Gallery
+      const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran foto terlalu besar! Maksimal 5MB.');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = (uploadEvent) => {
+            setCustomAvatar(uploadEvent.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!/^\d{6}$/.test(id)) {
+          setError('ID harus tepat 6 digit angka!');
+          return;
+        }
+        const finalName = name.trim() || `Pengguna #${id}`;
+        onLogin({ id, name: finalName, avatar: customAvatar });
+      };
+
+      return (
+        <div className="login-screen slide-up">
+          <div className="login-header">
+            <div className="login-badge">🆔 ChatID Realtime</div>
+            <h2>Masuk ke Account</h2>
+            <p>Upload foto profil kamu dari galeri HP / file luar!</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="login-form">
+            {/* Custom Photo Upload Section */}
+            <div className="input-group">
+              <label>Foto Profil Anda</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef} 
+                className="hidden-file-input" 
+                onChange={handleFileChange}
+              />
+              <div className="photo-upload-box" onClick={() => fileInputRef.current.click()}>
+                <img src={customAvatar} className="preview-user-avatar" alt="Avatar" />
+                <div className="upload-text-info">
+                  <span className="upload-title">📁 Pilih Foto dari Galeri HP</span>
+                  <span className="upload-subtitle">Klik di sini untuk upload foto dari luar</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="input-group">
+              <label>Atau Pilih Avatar bawaan:</label>
+              <div className="avatar-picker">
+                {DEFAULT_AVATARS.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    className={`avatar-option ${customAvatar === url ? 'selected' : ''}`}
+                    onClick={() => setCustomAvatar(url)}
+                    alt="Avatar Default"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="input-group">
+              <label>6-Digit ID Pengguna <span className="required">*</span></label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="Contoh: 123456"
+                  value={id}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setId(val);
+                    if (val.length === 6) setError('');
+                  }}
+                  autoFocus
+                />
+                <button type="button" className="btn-random" onClick={generateRandomId}>🎲 Acak</button>
+              </div>
+              {error && <span className="error-text">{error}</span>}
+            </div>
+
+            <div className="input-group">
+              <label>Nama Tampilan (Opsional)</label>
+              <input
+                type="text"
+                placeholder="Masukkan nama Anda..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            <button type="submit" className="btn-login" disabled={id.length !== 6}>
+              Masuk Sekarang →
+            </button>
+          </form>
+        </div>
+      );
+    }
+
+    function HomeScreen({ currentUser, conversations, users, onOpenChat, onOpenSearch, onLogout, onUpdateAvatar }) {
+      const [copied, setCopied] = React.useState(false);
+      const fileInputRef = React.useRef(null);
+
+      const handleCopyId = () => {
+        navigator.clipboard.writeText(currentUser.id);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      };
+
+      const handleAvatarChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (uploadEvent) => {
+            onUpdateAvatar(uploadEvent.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      return (
+        <div className="home-screen fade-in">
+          <div className="home-header">
+            <div className="user-profile-bar">
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef} 
+                className="hidden-file-input" 
+                onChange={handleAvatarChange}
+              />
+              <div className="user-avatar-container" onClick={() => fileInputRef.current.click()} title="Ubah Foto Profil">
+                <img src={currentUser.avatar} alt="Me" className="user-avatar-mini" />
+                <div className="avatar-edit-badge">📷</div>
+              </div>
+
+              <div className="user-info-mini">
+                <h3 className="user-name">{currentUser.name}</h3>
+                <div className="user-id-badge" onClick={handleCopyId}>
+                  <span>ID: <strong>{currentUser.id}</strong></span>
+                  <span>{copied ? '✓ Tersalin' : '📋'}</span>
+                </div>
+              </div>
+              <button className="btn-logout" onClick={onLogout} title="Keluar">🚪</button>
+            </div>
+
+            <div className="search-bar-trigger" onClick={onOpenSearch}>
+              <span>🔍 Cari pengguna dengan 6 digit ID...</span>
+            </div>
+          </div>
+
+          <div className="home-body">
+            <div className="section-title">
+              <span>Pesan Pribadi</span>
+              <span>{conversations.length}</span>
+            </div>
+
+            <div className="chat-list">
+              {conversations.map((conv) => {
+                const otherUser = users.find(u => u.id === conv.id) || {
+                  id: conv.id,
+                  name: `Pengguna #${conv.id}`,
+                  avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${conv.id}`,
+                  status: 'Online'
+                };
+                const lastMessage = conv.messages[conv.messages.length - 1];
+
+                return (
+                  <div key={conv.id} className="chat-item" onClick={() => onOpenChat(conv.id)}>
+                    <div className="avatar-wrapper">
+                      <img src={otherUser.avatar} alt={otherUser.name} className="chat-avatar" />
+                      <div className="status-indicator online"></div>
+                    </div>
+                    <div className="chat-info">
+                      <div className="chat-header-row">
+                        <h4 className="chat-name">{otherUser.name}</h4>
+                        <span className="chat-time">{lastMessage ? lastMessage.time : ''}</span>
+                      </div>
+                      <div className="chat-preview-row">
+                        <p className="chat-last-msg">
+                          {lastMessage ? (
+                            <>
+                              {lastMessage.senderId === currentUser.id ? 'Anda: ' : ''}
+                              {lastMessage.text}
+                            </>
+                          ) : 'Belum ada pesan'}
+                        </p>
+                        {conv.unreadCount > 0 && <span className="unread-badge">{conv.unreadCount}</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <button className="fab-search" onClick={onOpenSearch}>➕</button>
+        </div>
+      );
+    }
+
+    function SearchModal({ users, currentUser, onSelectUser, onClose }) {
+      const [searchId, setSearchId] = React.useState('');
+      const [searched, setSearched] = React.useState(false);
+      const [foundUser, setFoundUser] = React.useState(null);
+
+      const handleSearch = (e) => {
+        e.preventDefault();
+        if (!searchId || searchId.length !== 6) return;
+
+        setSearched(true);
+        if (searchId === currentUser.id) {
+          setFoundUser('SELF');
+          return;
+        }
+
+        const match = users.find(u => u.id === searchId);
+        if (match) {
+          setFoundUser(match);
+        } else {
+          setFoundUser({
+            id: searchId,
+            name: `Pengguna #${searchId}`,
+            avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${searchId}`,
+            bio: 'Pengguna ChatID Real-Time'
+          });
+        }
+      };
+
+      return (
+        <div className="search-modal-backdrop fade-in">
+          <div className="search-modal-container slide-up">
+            <div className="modal-header">
+              <button className="btn-icon" onClick={onClose}>←</button>
+              <h3>Cari Pengguna ID</h3>
+            </div>
+
+            <form onSubmit={handleSearch} className="search-field">
+              <span className="icon-search">🔍</span>
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="Masukkan 6-digit ID..."
+                value={searchId}
+                onChange={(e) => {
+                  setSearchId(e.target.value.replace(/\D/g, ''));
+                  setSearched(false);
+                }}
+                autoFocus
+              />
+              {searchId.length === 6 && <button type="submit" className="btn-search-go">Cari</button>}
+            </form>
+
+            {searched && foundUser && foundUser !== 'SELF' && (
+              <div className="result-profile-card">
+                <div className="profile-banner"></div>
+                <div className="profile-content">
+                  <img src={foundUser.avatar} alt="Profile" className="profile-avatar" />
+                  <h4 className="profile-name">{foundUser.name}</h4>
+                  <span className="profile-id-tag">ID: {foundUser.id}</span>
+                  <button className="btn-start-chat" onClick={() => onSelectUser(foundUser)}>
+                    💬 Mulai Chat Sekarang
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function ChatScreen({ targetUser, currentUser, messages, onSendMessage, onBack }) {
+      const [inputText, setInputText] = React.useState('');
+      const messagesEndRef = React.useRef(null);
+
+      React.useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages]);
+
+      const handleSend = (e) => {
+        e.preventDefault();
+        if (!inputText.trim()) return;
+        onSendMessage(inputText.trim());
+        setInputText('');
+      };
+
+      return (
+        <div className="chat-screen fade-in">
+          <div className="chat-header">
+            <button className="btn-back" onClick={onBack}>←</button>
+            <div className="target-user-info">
+              <img src={targetUser.avatar} alt="Avatar" className="header-avatar" />
+              <div className="user-details">
+                <h3 className="target-name">{targetUser.name}</h3>
+                <span className="target-status">ID: {targetUser.id} • Online</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="messages-container">
+            {messages.map((msg) => {
+              const isSentByMe = msg.senderId === currentUser.id;
+              return (
+                <div key={msg.id} className={`message-bubble-wrapper ${isSentByMe ? 'sent' : 'received'}`}>
+                  <div className="message-bubble">
+                    <p className="message-text">{msg.text}</p>
+                    <div className="message-meta">
+                      <span className="message-time">{msg.time}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form onSubmit={handleSend} className="chat-input-area">
+            <input
+              type="text"
+              placeholder="Ketik pesan..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              className="chat-input"
+            />
+            <button type="submit" className="btn-send" disabled={!inputText.trim()}>➤</button>
+          </form>
+        </div>
+      );
+    }
+
+    function App() {
+      const [screen, setScreen] = React.useState('SPLASH');
+      const [currentUser, setCurrentUser] = React.useState(null);
+      const [users, setUsers] = React.useState([]);
+      const [conversations, setConversations] = React.useState([]);
+      const [activeChatUserId, setActiveChatUserId] = React.useState(null);
+      const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+
+      React.useEffect(() => {
+        const savedUser = localStorage.getItem('chatID_currentUser');
+        if (savedUser) {
+          try { setCurrentUser(JSON.parse(savedUser)); } catch(e) {}
+        }
+      }, []);
+
+      const handleLogin = (userData) => {
+        setCurrentUser(userData);
+        localStorage.setItem('chatID_currentUser', JSON.stringify(userData));
+        setScreen('HOME');
+      };
+
+      const handleUpdateAvatar = (newAvatarUrl) => {
+        const updated = { ...currentUser, avatar: newAvatarUrl };
+        setCurrentUser(updated);
+        localStorage.setItem('chatID_currentUser', JSON.stringify(updated));
+      };
+
+      const handleLogout = () => {
+        setCurrentUser(null);
+        localStorage.removeItem('chatID_currentUser');
+        setScreen('LOGIN');
+      };
+
+      const handleSendMessage = (text) => {
+        if (!activeChatUserId || !currentUser) return;
+        const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const newMsg = { id: 'm_' + Date.now(), senderId: currentUser.id, text, time: timeNow };
+
+        setConversations(prev => prev.map(conv => {
+          if (conv.id === activeChatUserId) {
+            return { ...conv, messages: [...conv.messages, newMsg] };
+          }
+          return conv;
+        }));
+
+        chatChannel.postMessage({
+          type: 'NEW_MESSAGE',
+          payload: {
+            targetId: activeChatUserId,
+            senderId: currentUser.id,
+            senderName: currentUser.name,
+            text,
+            time: timeNow
+          }
+        });
+      };
+
+      const activeTargetUser = users.find(u => u.id === activeChatUserId) || {
+        id: activeChatUserId,
+        name: `Pengguna #${activeChatUserId}`,
+        avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${activeChatUserId}`
+      };
+
+      const activeMessages = conversations.find(c => c.id === activeChatUserId)?.messages || [];
+
+      return (
+        <React.Fragment>
+          {screen === 'SPLASH' && <SplashScreen onFinish={() => setScreen(currentUser ? 'HOME' : 'LOGIN')} />}
+          {screen === 'LOGIN' && <LoginScreen onLogin={handleLogin} />}
+          {screen === 'HOME' && currentUser && (
+            <HomeScreen 
+              currentUser={currentUser}
+              conversations={conversations}
+              users={users}
+              onOpenChat={(id) => { setActiveChatUserId(id); setScreen('CHAT'); }}
+              onOpenSearch={() => setIsSearchOpen(true)}
+              onLogout={handleLogout}
+              onUpdateAvatar={handleUpdateAvatar}
+            />
+          )}
+          {screen === 'CHAT' && currentUser && (
+            <ChatScreen 
+              targetUser={activeTargetUser}
+              currentUser={currentUser}
+              messages={activeMessages}
+              onSendMessage={handleSendMessage}
+              onBack={() => setScreen('HOME')}
+            />
+          )}
+          {isSearchOpen && currentUser && (
+            <SearchModal 
+              users={users}
+              currentUser={currentUser}
+              onSelectUser={(u) => {
+                if (!users.some(x => x.id === u.id)) setUsers(prev => [...prev, u]);
+                if (!conversations.some(c => c.id === u.id)) setConversations(prev => [{ id: u.id, unreadCount: 0, messages: [] }, ...prev]);
+                setActiveChatUserId(u.id);
+                setIsSearchOpen(false);
+                setScreen('CHAT');
+              }}
+              onClose={() => setIsSearchOpen(false)}
+            />
+          )}
+        </React.Fragment>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
